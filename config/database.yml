@@ -1,0 +1,20 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  host: <%= ENV.fetch('DATABASE_HOST', 'db') %>
+  username: <%= ENV.fetch('DATABASE_USER', 'postgres') %>
+  password: <%= ENV.fetch('DATABASE_PASSWORD', 'password') %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  database: <%= ENV.fetch('DATABASE_NAME', 'aws_practice_development') %>
+
+test:
+  <<: *default
+  database: aws_practice_test
+
+production:
+  <<: *default
+  database: <%= ENV.fetch('DATABASE_NAME') %>
+  port: 5432

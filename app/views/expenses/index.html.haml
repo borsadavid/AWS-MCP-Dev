@@ -1,0 +1,53 @@
+.container
+  = turbo_stream_from "expenses"
+  = turbo_stream_from "query_status"
+
+  %h1 Expense Tracker
+
+  .card#query_box
+    %h3 Ask AI Assistant
+    = form_with url: query_expenses_path, method: :post do |f|
+      .field-group{ style: "margin-bottom: 15px;" }
+        = f.label :prompt, "How can I help you today?"
+        = f.text_area :prompt, placeholder: "e.g. How much did I spend on Food last month in EUR?", rows: 3, class: "ai-input"
+      
+      = f.submit "Ask AI", class: "btn-primary"
+
+    #query_results
+
+  .card
+    %h3 Add New Expense
+    = form_with model: Expense.new do |f|
+      .form-grid
+        .field-group
+          = f.label :amount
+          = f.number_field :amount, step: 0.01
+        .field-group
+          = f.label :currency
+          = f.select :currency, ["EUR", "USD", "RON"]
+        .field-group
+          = f.label :category_id, "Category"
+          = f.collection_select :category_id, @categories, :id, :name
+      .form-grid
+        .field-group
+          = f.label :description
+          = f.text_field :description
+        .field-group
+          = f.label :spent_at, "Date & Time"
+          = f.datetime_local_field :spent_at, value: Time.current.strftime('%Y-%m-%dT%H:%M')
+
+      = f.submit "Create Expense", class: "btn-primary"
+
+  .card
+    %h3 Recent Expenses
+    %table
+      %thead
+        %tr
+          %th Amount
+          %th Currency
+          %th Category
+          %th Description
+          %th Actions
+      %tbody#expenses_list
+        - @expenses.each do |expense|
+          = render expense

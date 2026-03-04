@@ -1,0 +1,9 @@
+%tr{ id: "expense_#{expense.id}" }
+  %td= number_with_precision(expense.amount, precision: 2)
+  %td= expense.currency
+  %td
+    %span.badge{ style: "background: #e2e3e5; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;" }
+      = expense.category&.name
+  %td= expense.description
+  %td
+    = button_to "Delete", expense_path(expense), method: :delete, form: { data: { turbo_confirm: "Are you sure?" } }, class: "btn-delete"

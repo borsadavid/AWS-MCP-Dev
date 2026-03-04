@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  amount: 
+  amount: 
+  currency: MyString
+  category: MyString
+  description: MyText
+  spent_at: 2026-01-10 17:47:09
+
+two:
+  amount: 
+  amount: 
+  currency: MyString
+  category: MyString
+  description: MyText
+  spent_at: 2026-01-10 17:47:09
