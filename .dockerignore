@@ -1,0 +1,32 @@
+# Git and IDE
+.git
+.gitignore
+*.md
+.byebug_history
+
+# Env and secrets (never ship into image)
+.env
+.env.*
+!.env.example
+*.pem
+
+# Logs and temp
+log/*
+tmp/*
+!log/.keep
+!tmp/.keep
+!tmp/pids/
+!tmp/pids/.keep
+
+# Storage and assets (rebuilt in image)
+storage/*
+!storage/.keep
+public/assets
+public/packs
+node_modules
+
+# Rails secrets
+config/master.key
+
+# AWS CLI / large tooling (if present in repo)
+aws/

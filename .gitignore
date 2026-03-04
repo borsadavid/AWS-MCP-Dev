@@ -34,6 +34,9 @@
 # Ignore private keys (e.g. AWS .pem)
 *.pem
 
+# AWS CLI v2 installer bundle (install CLI via apt/pip/official installer instead)
+/aws/
+
 /public/packs
 /public/packs-test
 /node_modules
