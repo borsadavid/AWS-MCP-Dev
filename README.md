@@ -1,75 +1,67 @@
-A Rails 7 Spendings tracker with the purpose of practicing the use of AI in apps and enterprise software standards, got a grasp of modern cloud workflows: MCP (AI → SQL), AWS ECR for image storage, and EC2 for app hosting. Includes a real cloud database (RDS eu-north-1), deployment scripts, and production access via Amazon IAM policies—mirroring real-world production setups.
-Other features practiced in this project:
-Elastic IP
-Nginx setup
+Built a Rails 7 Spendings tracker to practice AI in apps and modern cloud workflows: MCP (AI → SQL), AWS ECR + EC2, RDS (eu-north-1), **GitHub Actions CD** (auto-deploy on push to `main`), **Elastic IP**, and **Nginx** as a reverse proxy—mirroring real-world production setups. Most learning and guidance was from Claude AI.
 
 ---
 
 ## Development
 
-Use this to run the app locally.
+I use this to run the app locally.
 
-1. **Copy env and start stack**
-   ```bash
-   cp .env.example .env
-   # Edit GEMINI_API_KEY needed
-   docker compose up -d
-   ```
-2. **Useful commands**
-   ```bash
-   docker compose exec web rails c
-   docker compose run web <one-off-command>
-   ```
+1. **Copy env and start stack**  
+   Copying `.env.example` to `.env` and running `docker compose up -d` will start the stack (edit `GEMINI_API_KEY` in `.env` is needed (free version has enough tokens)).
+2. **Useful commands**  
+   `docker compose exec web rails c` will open a Rails console; `docker compose run web <one-off-command>` will run a one-off command in the web container.
 
-**References:** [ruby-openai](https://github.com/alexrudall/ruby-openai), [Gemini API](https://ai.google.dev/gemini-api/docs/models).
+**References I used:** [ruby-openai](https://github.com/alexrudall/ruby-openai), [Gemini API](https://ai.google.dev/gemini-api/docs/models).
 
 ---
 
 ## Deployment
 
-Deploy runs via **ECR** (image store) and **EC2** (run the container). AWS and SSH access required.
+I deploy via **ECR** (image store) and **EC2** (run the container). That will require AWS and SSH access.
 
-### One-time setup (per deployer / per server)
+### One-time setup (per server)
 
-- **Local:** AWS CLI configured (`aws configure`), Docker, and SSH key for EC2.
-- **EC2:** Install Docker and AWS CLI; create `~/.env.production` with production secrets (see **Production env** below). Copy `server-deploy.sh` to the server (e.g. `/home/ec2-user/`) and `chmod +x server-deploy.sh`.
+- **Local:** I have AWS CLI configured (`aws configure`), Docker, and an SSH key for EC2.
+- **EC2:** I installed Docker and AWS CLI on the instance; I created `~/.env.production` with production secrets (see **Production env** below). Copying `server-deploy.sh` to the server (`/home/ec2-user/`) and running `chmod +x server-deploy.sh` will make it runnable.
 
-### Deploy flow
+I attached an **Elastic IP** to the EC2 instance so the public IP stays fixed; I use that IP for SSH and for the GitHub secret `EC2_HOST` so CD keeps working.
 
-1. **On your machine (build and push image)**
+### Continuous deployment (GitHub Actions)
+
+Pushing to `main` will trigger an automatic deploy: the workflow will build the Docker image, push it to ECR, SSH into EC2, and run `./server-deploy.sh` (that will pull the new image and restart the container).
+
+**GitHub secrets I set** (Settings → Secrets and variables → Actions):
+
+| Secret | Description |
+|--------|-------------|
+| `AWS_ACCESS_KEY_ID` | IAM user with ECR push access. |
+| `AWS_SECRET_ACCESS_KEY` | Corresponding secret key. |
+| `EC2_HOST` | EC2 public IP. |
+| `EC2_SSH_KEY` | The private key (`.pem`) used to SSH as `ec2-user`. |
+
+Workflow file: `.github/workflows/deploy.yml`.
+
+### Manual deploy
+
+1. **On my machine (build and push image)**  
+   Running `./deploy.sh` will build the image and push it to ECR.
+2. **On the EC2 instance (pull and run)**  
+   After SSHing in (`ssh -i /path/to/your-key.pem ec2-user@<EC2_PUBLIC_IP>`), running `./server-deploy.sh` will pull the latest image and restart the app container.
+3. **Check logs**  
+   `docker logs aws-practice` will show the app logs.
+
+### Nginx on EC2
+
+The app container listens on port 3000. I use Nginx as a reverse proxy so the app is served on port 80.
+
+1. I installed Nginx on the EC2 instance (`sudo yum install nginx`).
+2. Copying the project’s config into Nginx and reloading will enable it, e.g.:
    ```bash
-   ./deploy.sh
+   sudo cp nginx_ec2.conf /etc/nginx/conf.d/aws-practice.conf
+   sudo nginx -t && sudo systemctl reload nginx
    ```
+3. Opening port 80 in the instance security group will make the app reachable at `http://<EC2_PUBLIC_IP>`.
+4. For HTTPS, **Certbot** would be used with a domain pointing to the Elastic IP; that would configure Nginx for TLS (I don’t have a domain set up for that).
 
-2. **On the EC2 instance (pull and run)**
-   ```bash
-   ssh -i /path/to/your-key.pem ec2-user@<EC2_PUBLIC_IP>
-   ./server-deploy.sh
-   ```
+Config reference: `nginx_ec2.conf`.
 
-3. **Check logs**
-   ```bash
-   docker logs aws-practice
-   ```
-
-### Production env (on EC2)
-
-Create `/home/ec2-user/.env.production` (or set `ENV_FILE` when running `server-deploy.sh`) with at least:
-
-- `RAILS_ENV=production`
-- `SECRET_KEY_BASE` (e.g. `openssl rand -hex 64`)
-- `DATABASE_HOST`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME` (from RDS/Postgres in eu-north-1)
-- `GEMINI_API_KEY`, `GEMINI_ENDPOINT` required
-
----
-
-## Project layout (Docker / deploy)
-
-| File | Purpose |
-|------|--------|
-| `Dockerfile` | Production image (Rails, assets, entrypoint). |
-| `docker-compose.yml` | Local dev: app + Postgres + Redis. |
-| `.env.example` | Template for local `.env`; do not commit `.env` or `.env.production`. |
-| `deploy.sh` | Run locally: build image, push to ECR. |
-| `server-deploy.sh` | Run on EC2: ECR login, pull, stop/start app container with `--env-file`. |
-| `.dockerignore` | Keeps secrets and junk out of the image build context. |
