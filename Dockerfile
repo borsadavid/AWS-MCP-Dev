@@ -17,9 +17,9 @@ RUN bundle install
 COPY . .
 
 # Compile CSS/JS into static files for production
-# SECRET_KEY_BASE_DUMMY=1 is a Rails trick — asset compilation doesn't
-# need a real secret, so we use a dummy to avoid errors
-RUN SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production bundle exec rails assets:precompile
+# SECRET_KEY_BASE does not need a real secret in this step, it will be loaded from .env.production when running
+# use a dummy to avoid errors
+RUN SECRET_KEY_BASE=temporary_build_key RAILS_ENV=production bundle exec rails assets:precompile
 
 # Copy and enable the entrypoint script
 COPY entrypoint.sh /usr/bin/entrypoint.sh

@@ -15,11 +15,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # GitHub's server downloads your code (like git clone)
+      # Download code from GitHub
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Sets up AWS credentials so subsequent steps can talk to AWS
+      # Configure AWS credentials for access to AWS
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -32,14 +32,14 @@ jobs:
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Builds your image and pushes it to ECR (same as deploy.sh)
+      # Build image and push it to ECR (same as deploy.sh)
       - name: Build and push Docker image
         run: |
           IMAGE_URI="${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}"
           docker build -t $IMAGE_URI .
           docker push $IMAGE_URI
 
-      # SSHs into your EC2 and runs server-deploy.sh
+      # SSH into EC2 and run server-deploy.sh
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1
         with:
