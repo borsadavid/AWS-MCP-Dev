@@ -1,4 +1,4 @@
-A Rails 7 Spendings tracker featuring Turbo, designed to practice end-to-end modern cloud workflows: MCP (AI → SQL), AWS ECR for image storage, and EC2 for app hosting. Includes a real cloud database (RDS eu-north-1), deployment scripts, and production access via Amazon IAM policies—mirroring real-world production setups.
+A Rails 7 Spendings tracker featuring Turbo, designed to practice end-to-end modern cloud workflows: MCP (AI → SQL), AWS ECR for image storage, and EC2 for app hosting. Includes a real cloud database (RDS eu-north-1), elastic ip, deployment scripts, and production access via Amazon IAM policies—mirroring real-world production setups.
 
 ---
 
